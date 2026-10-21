@@ -25,7 +25,7 @@ apps/
   web/           Vite + React + TanStack Query + dnd-kit
   storybook/     component workshop (stories live next to their components)
 packages/
-  ui/            theme engine: presets, OKLCH custom palettes, ThemeProvider, Tailwind tokens
+  ui/            theme engine (presets, OKLCH palettes, ThemeProvider, Tailwind tokens) and components
   widget-sdk/    widget contract and credential providers
   widgets/       the widgets (`./client` views, `./server` fetchers)
 ```
@@ -53,6 +53,12 @@ writes the result to `--am-*` variables on `<html>`; `theme.css` maps them to Ta
 `text-on-accent`, `text-accent-ink` for links and icons, `rounded-card|control|chip`,
 `shadow-1|2|3`, plus `starfield`, `chamfer`, and `hatch-<color>`. Unit tests hold every preset to
 WCAG AA for the pairings the components draw.
+
+The same package holds the shared components: `Button`, `IconButton`, `Badge`, `Chip`,
+`FilterChip`, `Field` with `Input` and `PasswordInput`, `Switch`, `SegmentedControl`, `Tabs`,
+`Menu`, `Tooltip`, `Popover`, `Card`, `Tile`, `ProgressBar`, `Sparkline`, `Avatar`, `Banner`,
+`Skeleton`, and `EmptyState`. Menus, tooltips, popovers, tabs, switches, and segmented controls are
+built on Radix for keyboard and screen-reader behavior. Each has stories in every variant and state.
 
 ## Adding a widget
 

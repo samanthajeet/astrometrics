@@ -193,12 +193,20 @@ function ContrastView() {
             <tr key={c.label} className="border-t border-line">
               <td className="px-4 py-3">{c.label}</td>
               <td className="px-4 py-3">
-                <span
-                  className="rounded-control px-3 py-1 font-semibold"
-                  style={{ background: c.background, color: c.foreground }}
-                >
-                  Sample
-                </span>
+                {c.required < 4.5 ? (
+                  <span
+                    aria-hidden
+                    className="inline-block h-7 w-16 rounded-control border-[3px]"
+                    style={{ background: c.background, borderColor: c.foreground }}
+                  />
+                ) : (
+                  <span
+                    className="rounded-control px-3 py-1 font-semibold"
+                    style={{ background: c.background, color: c.foreground }}
+                  >
+                    Sample
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3">
                 <Grade ratio={c.ratio} required={c.required} />

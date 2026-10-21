@@ -17,4 +17,9 @@ db:generate`, and commit the generated migration.
   The old `bg-space`/`lcars-*` classes in `apps/web` are being replaced in M0.5.
 - A new or changed preset must pass `packages/ui/src/theme/theme.test.ts`; nudge OKLCH lightness,
   not hue, to fix a failing pairing.
-- Interactive primitives (menu, tooltip, tabs, popover) use Radix, styled with our tokens.
+- Reach for `@astrometrics/ui` components before writing new markup. Interactive primitives (menu,
+  tooltip, tabs, popover, switch, segmented control) use Radix, styled with our tokens.
+- Tone-driven classes come from the maps in `packages/ui/src/components/tones.ts`; Tailwind only
+  sees literal class strings, so never build them with template strings.
+- A new component gets stories for every variant and state in all themes, with no accessibility
+  violations.
