@@ -1,0 +1,23 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# Astrometrics workshop
+
+Components and widgets, one at a time, with mock data. No server or tokens needed.
+
+## Where stories live
+
+Next to the component they cover, as `*.stories.tsx`:
+
+- `apps/web/src/**`: app shell, widget frame, and widget states
+- `packages/widgets/src/<widget>/**`: each widget's `Main` and `Compact` views
+- `packages/ui/src/**`: shared components and tokens (coming in M0.5)
+
+## Conventions
+
+- Every widget gets a story for **Main** and **Compact**.
+- Every widget state gets a story: loading, empty, error, stale, missing credential.
+- Stories render presentational components. Anything that fetches or drags gets a
+  presentational piece that the story can render with props.
+- Check the **Accessibility** panel; violations count as bugs.

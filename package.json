@@ -10,6 +10,8 @@
     "dev": "pnpm -r --parallel --filter @astrometrics/server --filter @astrometrics/web dev",
     "build": "pnpm --filter @astrometrics/web build",
     "start": "pnpm build && pnpm --filter @astrometrics/server start",
+    "storybook": "pnpm --filter @astrometrics/storybook dev",
+    "build-storybook": "pnpm --filter @astrometrics/storybook build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

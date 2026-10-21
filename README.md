@@ -11,6 +11,7 @@ Requires Node 24 (`nvm use`) and pnpm 10.
 pnpm install
 pnpm dev     # server on 127.0.0.1:4317, web on http://localhost:5173
 pnpm start   # production build served by the server at http://127.0.0.1:4317
+pnpm storybook  # component workshop on http://localhost:6006
 pnpm lint && pnpm typecheck && pnpm test
 ```
 
@@ -52,12 +53,13 @@ url)` attaches the credential, but only for providers the widget's manifest decl
 
 ## Roadmap
 
-| Milestone | Scope                                                                                                                 |
-| --------- | --------------------------------------------------------------------------------------------------------------------- |
-| M0 ✅     | Monorepo, local server and security guards, keychain credentials, two-column drag-and-drop dashboard, Stardate widget |
-| M1        | Watchlist (local list), TMDB upcoming releases, TVmaze new episodes for tracked shows                                 |
-| M2        | PTO tracker: ICS feed, OOO detection, accrual rule, balance                                                           |
-| M3        | GitHub: review queue, my PRs (checks, review state), assigned issues                                                  |
-| M4        | Shortcut: my open stories by workflow state                                                                           |
-| M5        | Polish: widget settings UI, error states, config export/import                                                        |
-| Later     | Electron app, hosted sync, AI briefing, connections and recommendations, more widgets                                 |
+| Milestone | Scope                                                                                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 ✅     | Monorepo, local server and security guards, keychain credentials, two-column drag-and-drop dashboard, Stardate widget                                   |
+| M0.5      | Design foundation: Storybook workshop; semantic theme tokens, presets, light/dark, custom accent in `packages/ui`; restyle the app; Appearance settings |
+| M1        | Watchlist (local list), TMDB upcoming releases, TVmaze new episodes for tracked shows                                                                   |
+| M2        | PTO tracker: ICS feed, OOO detection, accrual rule, balance                                                                                             |
+| M3        | GitHub: review queue, my PRs (checks, review state), assigned issues                                                                                    |
+| M4        | Shortcut: my open stories by workflow state                                                                                                             |
+| M5        | Polish: widget settings UI, error states, config export/import                                                                                          |
+| Later     | Electron app, hosted sync, AI briefing, connections and recommendations, more widgets                                                                   |
