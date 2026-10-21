@@ -6,6 +6,7 @@ import {
 } from '@astrometrics/widget-sdk';
 import { useState, type FormEvent } from 'react';
 import { useCredentials, useDeleteCredential, useSetCredential } from '../lib/queries';
+import { AppearanceSettings } from './AppearanceSettings';
 
 export function Settings() {
   const { data: statuses } = useCredentials();
@@ -16,7 +17,14 @@ export function Settings() {
       <h1 className="font-display text-[44px] leading-none font-semibold tracking-[0.04em] uppercase">
         Settings
       </h1>
-      <section aria-labelledby="credentials-heading" className="mt-8">
+      <section aria-labelledby="appearance-heading" className="mt-8">
+        <Eyebrow id="appearance-heading" role="heading" aria-level={2}>
+          Appearance
+        </Eyebrow>
+        <p className="mt-1 mb-4 text-sm text-muted">Saved in this browser.</p>
+        <AppearanceSettings />
+      </section>
+      <section aria-labelledby="credentials-heading" className="mt-10">
         <Eyebrow id="credentials-heading" role="heading" aria-level={2}>
           Credentials
         </Eyebrow>

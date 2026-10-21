@@ -14,7 +14,6 @@ db:generate`, and commit the generated migration.
   `MemoryCredentialStore`; never touch the real keychain in tests.
 - Style with the semantic utilities from `packages/ui/src/styles/theme.css` (`bg-raised`,
   `text-muted`, `text-on-accent`, ...), never raw hex or Tailwind's palette, so every theme applies.
-  The old `bg-space`/`lcars-*` classes in `apps/web` are being replaced in M0.5.
 - A new or changed preset must pass `packages/ui/src/theme/theme.test.ts`; nudge OKLCH lightness,
   not hue, to fix a failing pairing.
 - Reach for `@astrometrics/ui` components before writing new markup. Interactive primitives (menu,
