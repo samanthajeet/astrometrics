@@ -3,20 +3,8 @@
 @source '.';
 @source '../../../packages/widgets/src';
 
-@theme {
-  --color-space: #0a0c16;
-  --color-panel: #121626;
-  --color-panel-raised: #1a1f33;
-  --color-edge: #262d45;
-  --color-lcars-orange: #ff9c5b;
-  --color-lcars-gold: #ffcc66;
-  --color-lcars-lavender: #c9a0dc;
-  --color-lcars-blue: #8fa8ff;
-  --color-lcars-red: #e0645c;
-}
-
 @layer base {
   body {
-    @apply bg-space text-slate-200 antialiased;
+    @apply antialiased;
   }
 }

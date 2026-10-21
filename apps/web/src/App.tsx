@@ -16,7 +16,7 @@ export function App() {
         collapsed={collapsed}
         onToggle={() => setCollapsed(!collapsed)}
       />
-      <main className="flex-1 overflow-y-auto">
+      <main className="starfield flex-1 overflow-y-auto">
         {view === 'dashboard' ? (
           <Dashboard onOpenSettings={() => setView('settings')} />
         ) : (

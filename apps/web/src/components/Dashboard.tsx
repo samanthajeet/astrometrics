@@ -10,6 +10,7 @@ import {
   type UniqueIdentifier,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { Banner, Skeleton } from '@astrometrics/ui';
 import type { Column } from '@astrometrics/widget-sdk';
 import { useMemo, useState } from 'react';
 import type { Layout, WidgetInstance } from '../lib/api';
@@ -86,9 +87,22 @@ export function Dashboard({ onOpenSettings }: { onOpenSettings: () => void }) {
     if (changed) saveLayout.mutate(next);
   };
 
-  if (isPending) return <p className="p-8 text-slate-400">Loading…</p>;
+  if (isPending)
+    return (
+      <div aria-busy className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <Skeleton className="h-64 rounded-card" />
+        <Skeleton className="h-40 rounded-card" />
+        <span className="sr-only">Loading the dashboard</span>
+      </div>
+    );
   if (error)
-    return <p className="p-8 text-lcars-red">Couldn't reach the server: {error.message}</p>;
+    return (
+      <div className="p-6">
+        <Banner tone="danger" title="Couldn’t reach the local server" role="alert">
+          {error.message}
+        </Banner>
+      </div>
+    );
 
   return (
     <DndContext

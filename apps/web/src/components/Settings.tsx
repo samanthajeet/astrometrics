@@ -1,3 +1,4 @@
+import { Badge, Button, Card, Eyebrow, Field, PasswordInput } from '@astrometrics/ui';
 import {
   credentialProviderIds,
   credentialProviders,
@@ -12,22 +13,22 @@ export function Settings() {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="text-xl font-semibold">Settings</h1>
-      <section aria-labelledby="credentials-heading" className="mt-6">
-        <h2 id="credentials-heading" className="text-sm font-semibold text-lcars-lavender">
+      <h1 className="font-display text-[44px] leading-none font-semibold tracking-[0.04em] uppercase">
+        Settings
+      </h1>
+      <section aria-labelledby="credentials-heading" className="mt-8">
+        <Eyebrow id="credentials-heading" role="heading" aria-level={2}>
           Credentials
-        </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        </Eyebrow>
+        <p className="mt-1 text-sm text-muted">
           Stored in your system keychain. The local server attaches them to API requests; they are
           never sent to the browser.
         </p>
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-4 flex flex-col gap-4">
           {credentialProviderIds.map((provider) => (
-            <CredentialRow
-              key={provider}
-              provider={provider}
-              configured={configured.has(provider)}
-            />
+            <li key={provider}>
+              <CredentialRow provider={provider} configured={configured.has(provider)} />
+            </li>
           ))}
         </ul>
       </section>
@@ -46,7 +47,6 @@ function CredentialRow({
   const [value, setValue] = useState('');
   const setCredential = useSetCredential();
   const deleteCredential = useDeleteCredential();
-  const inputId = `credential-${provider}`;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -54,49 +54,48 @@ function CredentialRow({
   };
 
   return (
-    <li className="rounded-xl border border-edge bg-panel p-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium">{label}</h3>
-        <span className={`text-xs ${configured ? 'text-lcars-blue' : 'text-slate-500'}`}>
-          {configured ? 'Connected' : 'Not connected'}
-        </span>
-      </div>
-      <form onSubmit={submit} className="mt-3 flex flex-col gap-2">
-        <label htmlFor={inputId} className="text-xs text-slate-400">
-          {inputLabel}
-        </label>
-        <div className="flex gap-2">
-          <input
-            id={inputId}
-            type="password"
-            autoComplete="off"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={configured ? 'Enter a new value to replace' : ''}
-            className="min-w-0 flex-1 rounded-md border border-edge bg-space px-3 py-1.5 text-sm"
-          />
-          <button
+    <Card
+      title={label}
+      action={
+        configured ? (
+          <Badge tone="success">Connected</Badge>
+        ) : (
+          <Badge variant="outline">Not connected</Badge>
+        )
+      }
+    >
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        <Field label={inputLabel} help={help} error={setCredential.error?.message}>
+          {(control) => (
+            <PasswordInput
+              {...control}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={configured ? 'Enter a new value to replace' : ''}
+            />
+          )}
+        </Field>
+        <div className="flex flex-wrap gap-2">
+          <Button
             type="submit"
+            variant="primary"
+            size="sm"
             disabled={!value.trim() || setCredential.isPending}
-            className="rounded-md bg-lcars-orange px-3 py-1.5 text-sm font-medium text-space disabled:opacity-40"
           >
             Save
-          </button>
+          </Button>
           {configured && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-danger"
               onClick={() => deleteCredential.mutate(provider)}
-              className="rounded-md border border-edge px-3 py-1.5 text-sm hover:border-lcars-red hover:text-lcars-red"
             >
               Remove
-            </button>
+            </Button>
           )}
         </div>
-        <p className="text-xs text-slate-500">{help}</p>
-        {setCredential.error && (
-          <p className="text-xs text-lcars-red">{setCredential.error.message}</p>
-        )}
       </form>
-    </li>
+    </Card>
   );
 }

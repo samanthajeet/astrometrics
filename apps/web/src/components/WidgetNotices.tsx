@@ -1,4 +1,6 @@
+import { Banner, Button, EmptyState } from '@astrometrics/ui';
 import { credentialProviders, type CredentialProviderId } from '@astrometrics/widget-sdk';
+import { Plug } from 'lucide-react';
 
 export function MissingCredentialNotice({
   provider,
@@ -7,28 +9,41 @@ export function MissingCredentialNotice({
   provider: CredentialProviderId;
   onOpenSettings: () => void;
 }) {
+  const { label } = credentialProviders[provider];
   return (
-    <p className="text-sm text-slate-300">
-      Connect {credentialProviders[provider].label} to use this widget.{' '}
-      <button type="button" onClick={onOpenSettings} className="text-lcars-blue underline">
-        Open settings
-      </button>
-    </p>
+    <EmptyState
+      title={`Connect ${label} to use this widget`}
+      description="Add the credential in Settings and this widget fills in on its next refresh."
+      action={
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onOpenSettings}
+          leadingIcon={<Plug className="size-4" aria-hidden />}
+        >
+          Open Settings
+        </Button>
+      }
+    />
   );
 }
 
 export function ErrorNotice({ message }: { message: string }) {
-  return <p className="text-sm text-lcars-red">{message}</p>;
+  return (
+    <Banner tone="danger" title="Couldn’t load this widget" role="alert">
+      {message}
+    </Banner>
+  );
 }
 
 export function StaleNotice({ message }: { message?: string }) {
   return (
-    <p className="mt-2 text-xs text-lcars-gold">
-      Showing cached data{message ? `: ${message}` : ''}
-    </p>
+    <Banner tone="warning" title="Showing cached data" className="mt-3">
+      {message}
+    </Banner>
   );
 }
 
 export function UnknownWidgetNotice({ type }: { type: string }) {
-  return <p className="text-sm text-slate-400">Unknown widget type “{type}”.</p>;
+  return <p className="text-sm text-muted">Unknown widget type “{type}”.</p>;
 }
