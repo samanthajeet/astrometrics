@@ -363,3 +363,121 @@ describe('watchlist', () => {
     expect(await data()).toEqual(['Paper Moons']);
   });
 });
+
+describe('watchlist search', () => {
+  it('returns movies and shows, drops people, and marks titles already saved', async () => {
+    const { call, credentials, upstream } = setup();
+    await credentials.set('tmdb', 'secret-token');
+    upstream.mockImplementation(async (url) => {
+      const href = String(url);
+      if (href.includes('/search/multi')) {
+        return Response.json({
+          results: [
+            { id: 7, media_type: 'movie', title: 'Paper Moons', release_date: '2026-11-14' },
+            { id: 9, media_type: 'tv', name: 'Harbor Lights', first_air_date: '2024-03-01' },
+            { id: 3, media_type: 'person', name: 'Someone' },
+          ],
+        });
+      }
+      return Response.json({ title: 'Paper Moons', release_date: '2026-11-14' });
+    });
+    const saved = await json<{ id: string }>(
+      await call('/api/watchlist', {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'movie', tmdbId: 7 }),
+      }),
+    );
+
+    const res = await call('/api/watchlist/search?q=paper%20moons');
+    const searchUrl = new URL(String(upstream.mock.calls.at(-1)![0]));
+    expect(searchUrl.searchParams.get('query')).toBe('paper moons');
+    expect(searchUrl.searchParams.get('include_adult')).toBe('false');
+    expect(await res.json()).toEqual([
+      expect.objectContaining({
+        kind: 'movie',
+        tmdbId: 7,
+        year: 2026,
+        onWatchlist: { id: saved.id, status: 'want' },
+      }),
+      expect.objectContaining({ kind: 'tv', tmdbId: 9, title: 'Harbor Lights', onWatchlist: null }),
+    ]);
+  });
+
+  it('rejects queries shorter than two characters', async () => {
+    const { call } = setup();
+    expect((await call('/api/watchlist/search?q=a')).status).toBe(422);
+  });
+
+  it('needs a TMDB token', async () => {
+    const { call } = setup();
+    const res = await call('/api/watchlist/search?q=moons');
+    expect(res.status).toBe(409);
+  });
+});
+
+describe('watchlist details', () => {
+  async function saved(body: object, kind: 'movie' | 'tv') {
+    const ctx = setup();
+    await ctx.credentials.set('tmdb', 'secret-token');
+    ctx.upstream.mockImplementation(async () => Response.json(body));
+    const res = await ctx.call('/api/watchlist', {
+      method: 'POST',
+      body: JSON.stringify({ kind, tmdbId: 7 }),
+    });
+    return { ...ctx, id: (await json<{ id: string }>(res)).id };
+  }
+
+  it("returns a movie's overview, genres and runtime", async () => {
+    const { call, id } = await saved(
+      {
+        title: 'Paper Moons',
+        release_date: '2026-11-14',
+        overview: 'Two astronomers.',
+        tagline: 'Look up.',
+        genres: [{ name: 'Drama' }, { name: 'Romance' }],
+        runtime: 114,
+        status: 'Post Production',
+      },
+      'movie',
+    );
+
+    expect(await json<unknown>(await call(`/api/watchlist/${id}/details`))).toEqual({
+      overview: 'Two astronomers.',
+      tagline: 'Look up.',
+      genres: ['Drama', 'Romance'],
+      date: '2026-11-14',
+      runtimeMinutes: 114,
+      seasons: null,
+      episodes: null,
+      status: 'Post Production',
+    });
+  });
+
+  it("returns a show's seasons, episodes and typical episode length", async () => {
+    const { call, id } = await saved(
+      {
+        name: 'Harbor Lights',
+        first_air_date: '2024-03-01',
+        episode_run_time: [52],
+        number_of_seasons: 3,
+        number_of_episodes: 24,
+        status: 'Returning Series',
+      },
+      'tv',
+    );
+
+    expect(await json<unknown>(await call(`/api/watchlist/${id}/details`))).toMatchObject({
+      date: '2024-03-01',
+      runtimeMinutes: 52,
+      seasons: 3,
+      episodes: 24,
+      overview: null,
+      genres: [],
+    });
+  });
+
+  it('is not found for an id that is not on the watchlist', async () => {
+    const { call } = setup();
+    expect((await call('/api/watchlist/nope/details')).status).toBe(404);
+  });
+});

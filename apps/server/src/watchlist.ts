@@ -36,6 +36,15 @@ export function listWatchlist(db: Db, userId: string): WatchlistItem[] {
     .map(toItem);
 }
 
+export function getWatchlistItem(db: Db, userId: string, id: string) {
+  const row = db
+    .select()
+    .from(watchlistItems)
+    .where(and(eq(watchlistItems.id, id), eq(watchlistItems.userId, userId)))
+    .get();
+  return row && toItem(row);
+}
+
 export function findWatchlistItem(db: Db, userId: string, kind: WatchlistKind, tmdbId: number) {
   const row = db
     .select()

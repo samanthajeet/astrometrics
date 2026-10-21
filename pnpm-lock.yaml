@@ -252,9 +252,15 @@ importers:
 
   packages/widgets:
     dependencies:
+      '@astrometrics/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@astrometrics/widget-sdk':
         specifier: workspace:*
         version: link:../widget-sdk
+      lucide-react:
+        specifier: 1.60.0
+        version: 1.60.0(@types/react@19.3.0)(react@19.3.1)
       zod:
         specifier: 4.6.7
         version: 4.6.7

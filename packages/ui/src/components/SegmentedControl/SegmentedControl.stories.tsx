@@ -37,7 +37,7 @@ function WatchlistFilter() {
       onValueChange={setValue}
       options={[
         { value: 'all', label: 'All', count: 6 },
-        { value: 'want', label: 'Want', count: 2 },
+        { value: 'want', label: 'To watch', count: 2 },
         { value: 'watching', label: 'Watching', count: 2 },
         { value: 'done', label: 'Done', count: 2 },
       ]}

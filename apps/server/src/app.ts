@@ -17,11 +17,12 @@ import { addWidget, getOrCreateDashboard, listWidgets, removeWidget, setLayout }
 import { LOCAL_USER_ID, type Db } from './db/client';
 import { dashboards, fetchCache, widgetInstances } from './db/schema';
 import { localOnly, type LocalOnlyOptions } from './security';
-import { fetchTmdbTitle, TmdbNotFoundError } from './tmdb';
+import { fetchTmdbRecord, searchTmdb, TmdbNotFoundError } from './tmdb';
 import {
   addWatchlistItem,
   clearWatchlistCaches,
   findWatchlistItem,
+  getWatchlistItem,
   listWatchlist,
   removeWatchlistItem,
   setWatchlistStatus,
@@ -46,6 +47,7 @@ const addWatchlistSchema = z.object({
   status: z.enum(watchlistStatuses).default('want'),
 });
 const watchlistStatusSchema = z.object({ status: z.enum(watchlistStatuses) });
+const searchQuerySchema = z.string().trim().min(2).max(200);
 
 async function readJson(req: { json(): Promise<unknown> }): Promise<unknown> {
   return req.json().catch(() => null);
@@ -141,6 +143,31 @@ export function createApp(deps: AppDeps) {
 
   app.get('/api/watchlist', (c) => c.json(listWatchlist(db, c.get('userId'))));
 
+  app.get('/api/watchlist/search', async (c) => {
+    const query = searchQuerySchema.safeParse(c.req.query('q'));
+    if (!query.success) return c.json({ error: 'invalid_query' }, 422);
+
+    try {
+      const ctx = createWidgetContext(credentials, fetchImpl, ['tmdb']);
+      const results = await searchTmdb(ctx, query.data);
+      const saved = new Map(
+        listWatchlist(db, c.get('userId')).map((item) => [`${item.kind}:${item.tmdbId}`, item]),
+      );
+      return c.json(
+        results.map((result) => {
+          const item = saved.get(`${result.kind}:${result.tmdbId}`);
+          return { ...result, onWatchlist: item ? { id: item.id, status: item.status } : null };
+        }),
+      );
+    } catch (error) {
+      if (error instanceof MissingCredentialError) {
+        return c.json({ error: 'missing_credential', provider: error.provider }, 409);
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      return c.json({ error: 'fetch_failed', message }, 502);
+    }
+  });
+
   app.post('/api/watchlist', async (c) => {
     const body = addWatchlistSchema.safeParse(await readJson(c.req));
     if (!body.success) return c.json({ error: 'invalid_body' }, 422);
@@ -152,7 +179,7 @@ export function createApp(deps: AppDeps) {
 
     try {
       const ctx = createWidgetContext(credentials, fetchImpl, ['tmdb']);
-      const title = await fetchTmdbTitle(ctx, kind, tmdbId);
+      const { title } = await fetchTmdbRecord(ctx, kind, tmdbId);
       const item = addWatchlistItem(db, userId, { kind, tmdbId, status, ...title });
       clearWatchlistCaches(db, userId, manifests);
       return c.json(item, 201);
@@ -161,6 +188,24 @@ export function createApp(deps: AppDeps) {
         return c.json({ error: 'missing_credential', provider: error.provider }, 409);
       }
       if (error instanceof TmdbNotFoundError) return c.json({ error: 'unknown_title' }, 422);
+      const message = error instanceof Error ? error.message : String(error);
+      return c.json({ error: 'fetch_failed', message }, 502);
+    }
+  });
+
+  app.get('/api/watchlist/:id/details', async (c) => {
+    const item = getWatchlistItem(db, c.get('userId'), c.req.param('id'));
+    if (!item) return c.json({ error: 'not_found' }, 404);
+
+    try {
+      const ctx = createWidgetContext(credentials, fetchImpl, ['tmdb']);
+      const { details } = await fetchTmdbRecord(ctx, item.kind, item.tmdbId);
+      return c.json(details);
+    } catch (error) {
+      if (error instanceof MissingCredentialError) {
+        return c.json({ error: 'missing_credential', provider: error.provider }, 409);
+      }
+      if (error instanceof TmdbNotFoundError) return c.json({ error: 'unknown_title' }, 404);
       const message = error instanceof Error ? error.message : String(error);
       return c.json({ error: 'fetch_failed', message }, 502);
     }

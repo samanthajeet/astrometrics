@@ -1,12 +1,100 @@
-import type { Column, CredentialProviderId } from '@astrometrics/widget-sdk';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  Column,
+  CredentialProviderId,
+  TitleDetails,
+  TitleSearchResult,
+  WatchlistItem,
+  WatchlistKind,
+  WatchlistStatus,
+} from '@astrometrics/widget-sdk';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { api, type CredentialStatus, type Dashboard, type Layout, type WidgetData } from './api';
 
 const keys = {
   dashboard: ['dashboard'] as const,
   credentials: ['credentials'] as const,
   widgetData: (id: string) => ['widget-data', id] as const,
+  watchlist: ['watchlist'] as const,
+  watchlistSearch: (query: string) => ['watchlist-search', query] as const,
+  titleDetails: (id: string) => ['title-details', id] as const,
 };
+
+/** The server clears cached data for widgets that read the watchlist; refetch them too. */
+function invalidateWatchlist(queryClient: QueryClient) {
+  void queryClient.invalidateQueries({ queryKey: keys.watchlist });
+  void queryClient.invalidateQueries({ queryKey: ['watchlist-search'] });
+  void queryClient.invalidateQueries({ queryKey: ['widget-data'] });
+}
+
+export function useWatchlist() {
+  return useQuery({
+    queryKey: keys.watchlist,
+    queryFn: () => api<WatchlistItem[]>('/api/watchlist'),
+  });
+}
+
+export function useWatchlistSearch(query: string) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: keys.watchlistSearch(trimmed),
+    queryFn: () =>
+      api<TitleSearchResult[]>(`/api/watchlist/search?q=${encodeURIComponent(trimmed)}`),
+    enabled: trimmed.length >= 2,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+}
+
+export function useTitleDetails(id: string | null) {
+  return useQuery({
+    queryKey: keys.titleDetails(id ?? ''),
+    queryFn: () => api<TitleDetails>(`/api/watchlist/${id}/details`),
+    enabled: id !== null,
+    staleTime: 60 * 60_000,
+    retry: false,
+  });
+}
+
+export function useAddToWatchlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { kind: WatchlistKind; tmdbId: number; status?: WatchlistStatus }) =>
+      api<WatchlistItem>('/api/watchlist', { method: 'POST', body: JSON.stringify(body) }),
+    onSettled: () => invalidateWatchlist(queryClient),
+  });
+}
+
+export function useSetWatchlistStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: WatchlistStatus }) =>
+      api<WatchlistItem>(`/api/watchlist/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+    onMutate: ({ id, status }) => {
+      queryClient.setQueryData<WatchlistItem[]>(keys.watchlist, (items) =>
+        items?.map((item) => (item.id === id ? { ...item, status } : item)),
+      );
+    },
+    onSettled: () => invalidateWatchlist(queryClient),
+  });
+}
+
+export function useRemoveFromWatchlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/watchlist/${id}`, { method: 'DELETE' }),
+    onSettled: () => invalidateWatchlist(queryClient),
+  });
+}
 
 export function useDashboard() {
   return useQuery({ queryKey: keys.dashboard, queryFn: () => api<Dashboard>('/api/dashboard') });

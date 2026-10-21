@@ -26,7 +26,7 @@ export function WidgetFrame({
       ref={ref}
       style={style}
       className={cx(
-        'flex min-w-0 flex-col rounded-card border border-line bg-raised shadow-1 transition-[translate,box-shadow,opacity] duration-300 ease-spring hover:-translate-y-[3px] hover:shadow-2',
+        'flex min-w-0 flex-col rounded-card border border-line bg-raised shadow-1 transition-[translate,opacity] duration-300 ease-spring hover:-translate-y-[3px]',
         dimmed && 'opacity-60',
       )}
     >

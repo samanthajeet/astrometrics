@@ -17,7 +17,7 @@ export const Playground: Story = {};
 export const WatchStatus: Story = {
   render: () => (
     <div className="flex flex-wrap gap-2">
-      <Chip tone="accent-4">Want</Chip>
+      <Chip tone="accent-4">To watch</Chip>
       <Chip tone="accent" pulse>
         Watching
       </Chip>
