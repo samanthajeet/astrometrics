@@ -1,15 +1,20 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
 import type { CredentialProviderId } from './credentials';
+import type { WatchlistItem } from './watchlist';
 
 export type Column = 'main' | 'side';
 export type Platform = 'web' | 'desktop';
+/** App data a widget's server fetcher may read through its context. */
+export type DataSource = 'watchlist';
 
 export interface WidgetManifest<TSettings = unknown> {
   type: string;
   name: string;
   description: string;
   credentials: readonly CredentialProviderId[];
+  /** App data the fetcher reads. Changing that data clears this widget's cached result. */
+  reads?: readonly DataSource[];
   settingsSchema: z.ZodType<TSettings>;
   defaultSettings: TSettings;
   /** How often the server re-fetches data. `null` means the widget has no server data. */
@@ -26,6 +31,8 @@ export interface WidgetContext {
    * `url` is omitted.
    */
   request(provider: CredentialProviderId, url?: string, init?: RequestInit): Promise<Response>;
+  /** The current user's watchlist, read-only. Only for widgets whose manifest `reads` it. */
+  watchlist(): Promise<WatchlistItem[]>;
 }
 
 export interface ServerWidget<TSettings = unknown, TData = unknown> {

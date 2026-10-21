@@ -35,6 +35,25 @@ const echoWidget = defineServerWidget({
   },
 });
 
+const readerManifest = defineManifest({
+  type: 'reader',
+  name: 'Reader',
+  description: 'Test widget that reads the watchlist',
+  credentials: [],
+  reads: ['watchlist'],
+  settingsSchema: z.object({}),
+  defaultSettings: {},
+  refreshMs: 60_000,
+  platforms: ['web'],
+});
+
+const readerWidget = defineServerWidget({
+  manifest: readerManifest,
+  async fetch(ctx) {
+    return (await ctx.watchlist()).map((item) => item.title);
+  },
+});
+
 function setup() {
   const credentials = new MemoryCredentialStore();
   const upstream = vi.fn<typeof fetch>(async () => new Response('{}', { status: 200 }));
@@ -42,8 +61,8 @@ function setup() {
   const app = createApp({
     db: openDatabase(':memory:'),
     credentials,
-    manifests: { echo: echoManifest },
-    serverWidgets: { echo: echoWidget },
+    manifests: { echo: echoManifest, reader: readerManifest },
+    serverWidgets: { echo: echoWidget, reader: readerWidget },
     fetch: upstream,
     allowedHosts: [HOST],
     allowedOrigins: ['http://localhost:5173'],
@@ -214,5 +233,133 @@ describe('widget data', () => {
     advance(60_001);
     const body = await json<unknown>(await call(`/api/widgets/${id}/data`));
     expect(body).toMatchObject({ data: { status: 200 }, stale: true, error: 'offline' });
+  });
+});
+
+describe('watchlist', () => {
+  interface Item {
+    id: string;
+    kind: string;
+    tmdbId: number;
+    imdbId: string | null;
+    title: string;
+    year: number | null;
+    status: string;
+  }
+
+  const tmdb = (body: object, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+
+  const movie = {
+    title: 'Paper Moons',
+    release_date: '2026-11-14',
+    poster_path: '/moons.jpg',
+    imdb_id: 'tt0000001',
+  };
+
+  async function withToken() {
+    const ctx = setup();
+    await ctx.credentials.set('tmdb', 'secret-token');
+    ctx.upstream.mockImplementation(async (url) =>
+      String(url).includes('/movie/') ? tmdb(movie) : tmdb({ status_message: 'nope' }, 404),
+    );
+    return ctx;
+  }
+
+  const add = (call: ReturnType<typeof setup>['call'], body: object) =>
+    call('/api/watchlist', { method: 'POST', body: JSON.stringify(body) });
+
+  it('needs a TMDB token to add a title', async () => {
+    const { call } = setup();
+    const res = await add(call, { kind: 'movie', tmdbId: 7 });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'missing_credential', provider: 'tmdb' });
+  });
+
+  it("stores TMDB's details for a movie", async () => {
+    const { call, upstream } = await withToken();
+    const res = await add(call, { kind: 'movie', tmdbId: 7 });
+
+    expect(res.status).toBe(201);
+    expect(String(upstream.mock.calls[0]![0])).toBe('https://api.themoviedb.org/3/movie/7');
+    expect(await json<Item>(res)).toMatchObject({
+      kind: 'movie',
+      tmdbId: 7,
+      title: 'Paper Moons',
+      year: 2026,
+      imdbId: 'tt0000001',
+      status: 'want',
+    });
+    expect(await json<Item[]>(await call('/api/watchlist'))).toHaveLength(1);
+  });
+
+  it('reads the IMDb id of a show from its external ids', async () => {
+    const { call, credentials, upstream } = setup();
+    await credentials.set('tmdb', 'secret-token');
+    upstream.mockResolvedValue(
+      tmdb({
+        name: 'Harbor Lights',
+        first_air_date: '2024-03-01',
+        external_ids: { imdb_id: 'tt9' },
+      }),
+    );
+
+    const item = await json<Item>(await add(call, { kind: 'tv', tmdbId: 7, status: 'watching' }));
+    expect(String(upstream.mock.calls[0]![0])).toContain('/tv/7?append_to_response=external_ids');
+    expect(item).toMatchObject({
+      kind: 'tv',
+      title: 'Harbor Lights',
+      imdbId: 'tt9',
+      status: 'watching',
+    });
+  });
+
+  it('treats a movie and a show with the same TMDB id as different titles', async () => {
+    const { call, upstream } = await withToken();
+    await add(call, { kind: 'movie', tmdbId: 7 });
+    upstream.mockResolvedValueOnce(tmdb({ name: 'Seven', first_air_date: null }));
+
+    expect((await add(call, { kind: 'tv', tmdbId: 7 })).status).toBe(201);
+    const again = await add(call, { kind: 'movie', tmdbId: 7 });
+    expect(again.status).toBe(409);
+    expect(await again.json()).toMatchObject({ error: 'already_on_watchlist' });
+  });
+
+  it('rejects a title TMDB does not know', async () => {
+    const { call } = await withToken();
+    const res = await add(call, { kind: 'tv', tmdbId: 404 });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ error: 'unknown_title' });
+  });
+
+  it('changes status and removes items', async () => {
+    const { call } = await withToken();
+    const { id } = await json<Item>(await add(call, { kind: 'movie', tmdbId: 7 }));
+
+    const patched = await call(`/api/watchlist/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'done' }),
+    });
+    expect(await json<Item>(patched)).toMatchObject({ id, status: 'done' });
+
+    expect((await call(`/api/watchlist/${id}`, { method: 'DELETE' })).status).toBe(204);
+    expect((await call(`/api/watchlist/${id}`, { method: 'DELETE' })).status).toBe(404);
+    expect(await json<Item[]>(await call('/api/watchlist'))).toEqual([]);
+  });
+
+  it('refreshes widgets that read the watchlist when it changes', async () => {
+    const { call } = await withToken();
+    const widget = await json<WidgetRow>(
+      await call('/api/dashboard/widgets', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'reader', column: 'main' }),
+      }),
+    );
+    const data = async () =>
+      (await json<{ data: string[] }>(await call(`/api/widgets/${widget.id}/data`))).data;
+
+    expect(await data()).toEqual([]);
+    await add(call, { kind: 'movie', tmdbId: 7 });
+    expect(await data()).toEqual(['Paper Moons']);
   });
 });

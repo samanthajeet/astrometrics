@@ -1,16 +1,51 @@
+import { watchlistKinds, watchlistStatuses } from '@astrometrics/widget-sdk';
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-const createdAt = () =>
-  integer('created_at', { mode: 'timestamp_ms' })
+const createdAt = (name = 'created_at') =>
+  integer(name, { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch('subsec') * 1000)`);
 
-export const dashboards = sqliteTable('dashboards', {
+export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   createdAt: createdAt(),
 });
+
+export const dashboards = sqliteTable(
+  'dashboards',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index('dashboards_user_idx').on(table.userId)],
+);
+
+export const watchlistItems = sqliteTable(
+  'watchlist_items',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: watchlistKinds }).notNull(),
+    tmdbId: integer('tmdb_id').notNull(),
+    imdbId: text('imdb_id'),
+    title: text('title').notNull(),
+    year: integer('year'),
+    posterPath: text('poster_path'),
+    status: text('status', { enum: watchlistStatuses }).notNull().default('want'),
+    addedAt: createdAt('added_at'),
+  },
+  (table) => [
+    uniqueIndex('watchlist_items_user_title_idx').on(table.userId, table.kind, table.tmdbId),
+  ],
+);
 
 export const widgetInstances = sqliteTable(
   'widget_instances',

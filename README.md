@@ -75,9 +75,10 @@ built on Radix for keyboard and screen-reader behavior. Each has stories in ever
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0 ✅     | Monorepo, local server and security guards, keychain credentials, two-column drag-and-drop dashboard, Stardate widget                                   |
 | M0.5 ✅   | Design foundation: Storybook workshop; semantic theme tokens, presets, light/dark, custom accent in `packages/ui`; restyle the app; Appearance settings |
-| M1        | Watchlist (local list), TMDB upcoming releases, TVmaze new episodes for tracked shows                                                                   |
+| M1        | Watchlist (stored per user, edited in a modal), TMDB upcoming releases, TVmaze new episodes for tracked shows                                           |
 | M2        | PTO tracker: ICS feed, OOO detection, accrual rule, balance                                                                                             |
 | M3        | GitHub: review queue, my PRs (checks, review state), assigned issues                                                                                    |
 | M4        | Shortcut: my open stories by workflow state                                                                                                             |
 | M5        | Polish: widget settings UI, error states, config export/import                                                                                          |
-| Later     | Electron app, hosted sync, AI briefing, connections and recommendations, more widgets                                                                   |
+| M6        | Hosting: sign-in, per-user data and encrypted credentials, hosted database, deployment                                                                  |
+| Later     | Electron app, AI briefing, connections and recommendations, more widgets                                                                                |

@@ -1,6 +1,8 @@
 import {
   credentialProviders,
   type CredentialProviderId,
+  type DataSource,
+  type WatchlistItem,
   type WidgetContext,
 } from '@astrometrics/widget-sdk';
 import type { CredentialStore } from './store';
@@ -11,13 +13,27 @@ export class MissingCredentialError extends Error {
   }
 }
 
+export interface DataSources {
+  watchlist(): WatchlistItem[];
+}
+
+const noData: DataSources = { watchlist: () => [] };
+
 export function createWidgetContext(
   store: CredentialStore,
   fetchImpl: typeof fetch,
   allowed: readonly CredentialProviderId[],
+  { reads = [], sources = noData }: { reads?: readonly DataSource[]; sources?: DataSources } = {},
 ): WidgetContext {
   return {
     fetch: (url, init) => fetchImpl(url, init),
+
+    async watchlist() {
+      if (!reads.includes('watchlist')) {
+        throw new Error('This widget did not declare that it reads the watchlist.');
+      }
+      return sources.watchlist();
+    },
 
     async request(provider, url, init) {
       if (!allowed.includes(provider)) {

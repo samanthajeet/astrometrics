@@ -9,11 +9,16 @@ export interface Layout {
   side: string[];
 }
 
-export function getOrCreateDashboard(db: Db) {
-  const existing = db.select().from(dashboards).orderBy(asc(dashboards.createdAt)).get();
+export function getOrCreateDashboard(db: Db, userId: string) {
+  const existing = db
+    .select()
+    .from(dashboards)
+    .where(eq(dashboards.userId, userId))
+    .orderBy(asc(dashboards.createdAt))
+    .get();
   if (existing) return existing;
 
-  const dashboard = { id: randomUUID(), name: 'Bridge' };
+  const dashboard = { id: randomUUID(), userId, name: 'Bridge' };
   db.transaction((tx) => {
     tx.insert(dashboards).values(dashboard).run();
     tx.insert(widgetInstances)

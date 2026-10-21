@@ -21,6 +21,17 @@ describe('createWidgetContext', () => {
     );
   });
 
+  it('reads the watchlist only for widgets that declare it', async () => {
+    const store = new MemoryCredentialStore();
+    const sources = { watchlist: () => [] };
+    await expect(createWidgetContext(store, vi.fn(), [], { sources }).watchlist()).rejects.toThrow(
+      /did not declare/,
+    );
+    await expect(
+      createWidgetContext(store, vi.fn(), [], { reads: ['watchlist'], sources }).watchlist(),
+    ).resolves.toEqual([]);
+  });
+
   it('uses the stored URL for secret-url providers', async () => {
     const store = new MemoryCredentialStore();
     await store.set('calendar', 'https://calendar.example/secret.ics');
