@@ -74,7 +74,7 @@ built on Radix for keyboard and screen-reader behavior. Each has stories in ever
 | Milestone | Scope                                                                                                                                                   |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0 ✅     | Monorepo, local server and security guards, keychain credentials, two-column drag-and-drop dashboard, Stardate widget                                   |
-| M0.5      | Design foundation: Storybook workshop; semantic theme tokens, presets, light/dark, custom accent in `packages/ui`; restyle the app; Appearance settings |
+| M0.5 ✅   | Design foundation: Storybook workshop; semantic theme tokens, presets, light/dark, custom accent in `packages/ui`; restyle the app; Appearance settings |
 | M1        | Watchlist (local list), TMDB upcoming releases, TVmaze new episodes for tracked shows                                                                   |
 | M2        | PTO tracker: ICS feed, OOO detection, accrual rule, balance                                                                                             |
 | M3        | GitHub: review queue, my PRs (checks, review state), assigned issues                                                                                    |
