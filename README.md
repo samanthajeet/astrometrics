@@ -23,7 +23,9 @@ Data lives in `.data/astrometrics.db` (SQLite). Set `ASTROMETRICS_DATA_DIR` to m
 apps/
   server/        Hono + Drizzle/SQLite, credential store, widget data API
   web/           Vite + React + TanStack Query + dnd-kit
+  storybook/     component workshop (stories live next to their components)
 packages/
+  ui/            theme engine: presets, OKLCH custom palettes, ThemeProvider, Tailwind tokens
   widget-sdk/    widget contract and credential providers
   widgets/       the widgets (`./client` views, `./server` fetchers)
 ```
@@ -41,6 +43,16 @@ url)` attaches the credential, but only for providers the widget's manifest decl
   the main column render `Main`; widgets in the side column render `Compact`.
 - **Server data is cached.** `/api/widgets/:id/data` caches results for the widget's `refreshMs`
   and serves the last good result, marked stale, when a refresh fails.
+
+## Theming
+
+`@astrometrics/ui` builds every theme from five presets (Voyager, Halo-halo, Jeepney, Sampaguita,
+Nebula) or one custom accent, in light or dark, with sharp, soft, or round corners. `ThemeProvider`
+writes the result to `--am-*` variables on `<html>`; `theme.css` maps them to Tailwind utilities:
+`bg-surface`, `bg-raised`, `bg-sunken`, `text-fg`, `text-muted`, `border-line`, `bg-accent` with
+`text-on-accent`, `text-accent-ink` for links and icons, `rounded-card|control|chip`,
+`shadow-1|2|3`, plus `starfield`, `chamfer`, and `hatch-<color>`. Unit tests hold every preset to
+WCAG AA for the pairings the components draw.
 
 ## Adding a widget
 

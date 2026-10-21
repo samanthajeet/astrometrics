@@ -8,6 +8,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@astrometrics/ui": "workspace:*",
     "@astrometrics/widget-sdk": "workspace:*",
     "@astrometrics/widgets": "workspace:*",
     "@dnd-kit/core": "6.3.1",

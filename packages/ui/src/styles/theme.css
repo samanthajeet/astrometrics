@@ -1,0 +1,134 @@
+/*
+ * Import after `@import 'tailwindcss'`. ThemeProvider sets the --am-* variables on <html>;
+ * this file maps them to Tailwind utilities (bg-raised, text-muted, rounded-card, shadow-2, ...).
+ */
+@source '..';
+
+@theme inline {
+  --color-surface: var(--am-surface);
+  --color-raised: var(--am-surface-raised);
+  --color-sunken: var(--am-surface-sunken);
+  --color-fg: var(--am-text);
+  --color-muted: var(--am-text-muted);
+  --color-line: var(--am-border);
+  --color-accent: var(--am-accent);
+  --color-on-accent: var(--am-accent-contrast);
+  --color-accent-ink: var(--am-accent-text);
+  --color-accent-2: var(--am-accent-2);
+  --color-on-accent-2: var(--am-accent-2-contrast);
+  --color-accent-3: var(--am-accent-3);
+  --color-on-accent-3: var(--am-accent-3-contrast);
+  --color-accent-4: var(--am-accent-4);
+  --color-on-accent-4: var(--am-accent-4-contrast);
+  --color-success: var(--am-success);
+  --color-on-success: var(--am-success-contrast);
+  --color-warning: var(--am-warning);
+  --color-on-warning: var(--am-warning-contrast);
+  --color-danger: var(--am-danger);
+  --color-on-danger: var(--am-danger-contrast);
+  --color-focus: var(--am-focus-ring);
+  --radius-card: var(--am-radius-card);
+  --radius-control: var(--am-radius-control);
+  --radius-chip: var(--am-radius-chip);
+  --shadow-1: var(--am-shadow-1);
+  --shadow-2: var(--am-shadow-2);
+  --shadow-3: var(--am-shadow-3);
+}
+
+@theme {
+  --font-display: 'Antonio Variable', 'Arial Narrow', sans-serif;
+  --font-sans: 'DM Sans Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
+@layer base {
+  html[data-am-mode] body {
+    background-color: var(--am-surface);
+    color: var(--am-text);
+    font-family: var(--font-sans);
+  }
+
+  html[data-am-mode] :focus-visible {
+    outline: 3px solid var(--am-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html[data-am-mode] *,
+    html[data-am-mode] *::before,
+    html[data-am-mode] *::after {
+      animation-duration: 0ms !important;
+      transition-duration: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Faint grid with a scatter of accent-tinted stars. */
+@utility starfield {
+  background-image:
+    radial-gradient(
+      circle at 20px 30px,
+      color-mix(in oklab, var(--am-text) 28%, transparent) 0 1px,
+      transparent 1.6px
+    ),
+    radial-gradient(
+      circle at 150px 110px,
+      color-mix(in oklab, var(--am-text) 18%, transparent) 0 1.2px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 90px 210px,
+      color-mix(in oklab, var(--am-accent) 45%, transparent) 0 1.1px,
+      transparent 1.8px
+    ),
+    radial-gradient(
+      circle at 228px 64px,
+      color-mix(in oklab, var(--am-accent-2) 40%, transparent) 0 0.9px,
+      transparent 1.5px
+    ),
+    linear-gradient(color-mix(in oklab, var(--am-text) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--am-text) 4%, transparent) 1px, transparent 1px);
+  background-size:
+    260px 260px,
+    260px 260px,
+    260px 260px,
+    260px 260px,
+    52px 52px,
+    52px 52px;
+}
+
+/* LCARS-style cut corners (top-left and bottom-right). */
+@utility chamfer {
+  --am-notch: 22px;
+  clip-path: polygon(
+    var(--am-notch) 0,
+    100% 0,
+    100% calc(100% - var(--am-notch)),
+    calc(100% - var(--am-notch)) 100%,
+    0 100%,
+    0 var(--am-notch)
+  );
+}
+
+/* Diagonal-hatch fill in any theme color: hatch-accent, hatch-success, ... */
+@utility hatch-* {
+  --am-hatch: --value(--color-*);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--am-hatch) 0 5px,
+    color-mix(in oklab, var(--am-hatch) 42%, transparent) 5px 10px
+  );
+}
